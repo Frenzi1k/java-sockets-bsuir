@@ -19,6 +19,7 @@ public class Main extends JFrame implements ActionListener{
     private Button firstClient = new Button("First client");
     private Button secondClient = new Button("Second client");
     private TextField balance = new TextField("Balance");
+    private Server server = null;
 
     public Main(){
         this.setSize(500,250);
@@ -55,6 +56,7 @@ public class Main extends JFrame implements ActionListener{
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                server.interrupt();
                 dispose();
             }
         });
@@ -71,12 +73,14 @@ public class Main extends JFrame implements ActionListener{
             } else if (e.getSource() == secondClient){
                 getChangingBalance("post", 20);
             } else if (e.getSource() == start){
-                Server server = new Server();
+                server = new Server();
                 server.start();
                 getChangingBalance("get",null);
             }
 
-        } catch (Exception en){}
+        } catch (Exception en){
+            System.out.println("asdasd");
+        }
     }
 
 
@@ -84,11 +88,13 @@ public class Main extends JFrame implements ActionListener{
         Socket socket = null;
         try{
             socket = new Socket("127.0.0.1", 9090);
-        } catch (IOException e){}
+        } catch (IOException e){
+            balance.setText(e.getMessage());
+        }
         return socket;
     }
 
-    private void getChangingBalance(String type, Integer value) throws IOException{
+    private void getChangingBalance(String type, Integer value){
         new Thread(()->{
             try {
                 DataOutputStream out;
@@ -100,7 +106,7 @@ public class Main extends JFrame implements ActionListener{
                 balance.setText(in.readUTF());
             }catch (Exception e){
                 if (e.getClass().equals(ConnectException.class)){
-                    balance.setText("Server is down");
+                    balance.setText(e.getMessage());
                 }
             }
         }).start();
